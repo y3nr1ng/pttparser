@@ -21,6 +21,7 @@ class Ptt(object):
         self.client.set_missing_host_key_policy(paramiko.WarningPolicy())
         return self
 
+    # establish the actual SSH connection
     def __establish(self):
         try:
             self.client.connect('ptt.cc', username = 'bbsu', password = '')
@@ -41,18 +42,21 @@ class Ptt(object):
         # set channel timeout to 1 second
         self.channel.settimeout(self.timeout)
 
+    # set timeout for server response
     def set_timeout(t):
         if t >= 0:
             self.timeout = t
         else:
             print('... Timeout needs to be positive')
-            
+
+    # set emulated terminal size, default to 80x24
     def set_screen_size(width = None, heigth = None):
         if width != None:
             self.width = width
         if height != None:
             self.height = height
 
+    # provide username and password to the server
     def connect(self, username, password, use_b64 = True):
         self.__establish()
 
@@ -67,6 +71,7 @@ class Ptt(object):
         # send CR to get into the directory
         self.send('')
 
+    # send raw commands to the server
     def send(self, cmd = None, newline = True, debug = False):
         while not self.channel.send_ready():
             time.sleep(self.delay)
@@ -78,6 +83,7 @@ class Ptt(object):
             print('send [', cmd, ']')
         self.channel.send(cmd)
 
+    # retrieve cleaned screen from the server
     def get_screen(self, wait = True, debug = False):
         if wait:
             time.sleep(self.timeout)
@@ -94,6 +100,7 @@ class Ptt(object):
 
         return screen
 
+    # wait for response from the server to trigger continuous retrieval
     def __wait_str(self):
         ch = ''
         while True:
@@ -102,12 +109,15 @@ class Ptt(object):
                 break
         return self.__dec_bytes(ch)
 
+    # retrieve designated length of string from the byte buffer
     def __recv_str(self, buf_size = 1920):
         return self.__dec_bytes(self.channel.recv(buf_size))
 
+    # decode byte array to UTF-8 string
     def __dec_bytes(self, bytes):
         return bytes.decode('utf-8', errors = 'ignore')
 
+    # clean up the control code in the raw screen
     def __clean_up(self, screen,
                    nocolor = True, nocr = True, noesc = True):
         if not screen:

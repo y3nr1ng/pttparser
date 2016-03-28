@@ -78,7 +78,7 @@ class Ptt(object):
         if cmd == None:
             cmd = ' '
         if newline:
-            cmd += '\r\n'
+            cmd += '\r'
         if debug:
             print('send [', cmd, ']')
         self.channel.send(cmd)
